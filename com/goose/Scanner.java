@@ -29,8 +29,12 @@ public class Scanner {
         return tokenList;
     }
 
+    private char advance(){
+        return code.charAt(current++);
+    }
+
     private void scanToken(){
-        char currChar = code.charAt(current++);
+        char currChar = advance();
 
         switch (currChar) {
             //single character tokens
@@ -71,13 +75,73 @@ public class Scanner {
             case '\n':
                 line++;
                 break;
+            
+            case '"': string(); break;
         
             // if we see a character we don't expect
             default:
+                if(isDigit(currChar)){
+                    number();
+                }
+                // checks for reserved words
+                else if(isChar(currChar)){
+                    identifier();
+                }
                 Goose.error(line, "Unexpected character.");
                 break;
           }
         
+    }
+
+    private void identifier(){
+
+    }
+
+    private void number(){
+
+        while(isDigit(peek())){
+            advance();
+        }
+
+        if(peek() == '.'  && isDigit(peekNext())){
+            
+            advance();
+
+            while(isDigit(peek())){
+                advance();
+            }
+        }
+
+        addToken(NUMBER, Double.parseDouble(code.substring(start, current)));
+    }
+
+    private void string(){
+
+        while(peek() != '"' && !isAtEnd()){
+            if (peek() == '\n'){
+                line++;
+            }
+
+            advance();
+        }
+
+        if(isAtEnd()){
+            Goose.error(line, "String is not terminated.");
+        }
+
+        // add the closing quote
+        advance();
+
+        String lexeme = code.substring(start + 1, current-1);
+        addToken(STRING, lexeme);
+    }
+
+    private boolean isDigit(char c) {
+        return c >= '0' && c <= '9';
+      }
+
+    private boolean isChar(char c){
+        return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||  (c == '_');
     }
 
     // to be used to create a token for non literal tokens
@@ -114,6 +178,16 @@ public class Scanner {
     private char peek(){
         if(!isAtEnd()){
             return code.charAt(current);
+        }
+        else{
+            return '\0';
+        }
+    }
+
+    private char peekNext(){
+        if(!isAtEnd()){
+            int temp = current + 1;
+            return code.charAt(temp);
         }
         else{
             return '\0';
