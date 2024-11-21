@@ -9,6 +9,28 @@ import static com.goose.TokenType.*;
 
 public class Scanner {
 
+    private static final Map<String, TokenType> keywords;
+
+    static {
+        keywords = new HashMap<>();
+        keywords.put("and",    AND);
+        keywords.put("class",  CLASS);
+        keywords.put("else",   ELSE);
+        keywords.put("false",  FALSE);
+        keywords.put("for",    FOR);
+        keywords.put("fun",    FUN);
+        keywords.put("if",     IF);
+        keywords.put("nil",    NIL);
+        keywords.put("or",     OR);
+        keywords.put("print",  PRINT);
+        keywords.put("return", RETURN);
+        keywords.put("super",  SUPER);
+        keywords.put("this",   THIS);
+        keywords.put("true",   TRUE);
+        keywords.put("var",    VAR);
+        keywords.put("while",  WHILE);
+    }
+
     private final String code;
     private int start = 0;
     private int current = 0;
@@ -20,6 +42,7 @@ public class Scanner {
         this.code = code;
     }
 
+    // this is calls scanToken until the file is at its end
     List <Token> scanTokens(){
         
         while (!isAtEnd()){
@@ -30,9 +53,11 @@ public class Scanner {
     }
 
     private char advance(){
+        // note that this is fine that we increment even the first char we look at, because String literals start with "
         return code.charAt(current++);
     }
 
+    // scans characters into tokens
     private void scanToken(){
         char currChar = advance();
 
@@ -87,14 +112,29 @@ public class Scanner {
                 else if(isChar(currChar)){
                     identifier();
                 }
-                Goose.error(line, "Unexpected character.");
-                break;
+                else{
+                    Goose.error(line, "Unexpected character." + Character.toString(currChar));
+                    break;
+                }
           }
         
     }
 
     private void identifier(){
+        //while the character ahead is either a number or character
+        while(isCharOrNum(peek())){
+            advance();
+        }
 
+        String text = code.substring(start, current);
+
+        // if our word is a reserved word
+        if(keywords.containsKey(text)){
+            addToken(keywords.get(text));
+        }
+        else{
+            addToken(IDENTIFIER);
+        }
     }
 
     private void number(){
@@ -144,12 +184,18 @@ public class Scanner {
         return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||  (c == '_');
     }
 
+    private boolean isCharOrNum(char c){
+        return isChar(c) || isDigit(c);
+    }
+
     // to be used to create a token for non literal tokens
     private void addToken(TokenType type){
         addToken(type, null);
     }
 
     // creates the token for a given type and literal, and adds it to our list of tokens
+    // type is one of our predefined types, eg. NUMBER, lexeme is the string representation of our literal,
+    // and literal is the representation of our literal in the type that it is. line is line number.
     private void addToken(TokenType type, Object literal){
         String lexeme = code.substring(start, current);
         tokenList.add(new Token(type, lexeme, literal, line));
