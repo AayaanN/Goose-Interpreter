@@ -1,0 +1,21 @@
+// Source code is decompiled from a .class file using FernFlower decompiler.
+package com.goose;
+
+public class Token {
+   final TokenType type;
+   final String lexeme;
+   final Object literal;
+   final int line;
+
+   Token(TokenType var1, String var2, Object var3, int var4) {
+      this.type = var1;
+      this.lexeme = var2;
+      this.literal = var3;
+      this.line = var4;
+   }
+
+   public String toString() {
+      String var10000 = String.valueOf(this.type);
+      return var10000 + " " + this.lexeme + " " + String.valueOf(this.literal);
+   }
+}
